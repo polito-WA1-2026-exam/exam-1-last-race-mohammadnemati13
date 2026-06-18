@@ -5,21 +5,18 @@
  * metro network, including line information, in order to
  * memorize stations and connections before planning a route.
  */
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { getNetwork } from "../API";
-import metroMap from "../assets/metro-map.png";
+import MetroMap from "../components/MetroMap";
 
 function SetupPage() {
-
     const navigate = useNavigate();
 
     const [network, setNetwork] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-
     /**
      * Load the complete metro network when the page is mounted.
      */
@@ -31,7 +28,6 @@ function SetupPage() {
 
                 const data = await getNetwork();
                 setNetwork(data);
-
             }
             catch {
 
@@ -66,15 +62,21 @@ function SetupPage() {
                 {" "}
                 when you are ready. The next phase is timed.
             </p>
-
-            <img
-                src={metroMap}
-                alt="Metro Map"
-                className="img-fluid mb-4"
-            />
+            {/* Full network visualization used during the memorization phase. */}
+            {
+                loading ? (
+                    <p>Loading network...</p>
+                ) : (
+                    <MetroMap
+                        segments={network}
+                        route={[]}
+                        showFullNetwork={true}
+                    />
+                )
+            }
 
             <button
-                className="btn btn-success mb-4"
+                className="btn btn-success mt-4 mb-4"
                 disabled={loading}
                 onClick={() => navigate("/planning")}
             >
@@ -85,34 +87,6 @@ function SetupPage() {
                 <p className="text-danger">
                     {error}
                 </p>
-            )}
-
-            {loading ? (
-                <p>Loading network...</p>
-            ) : (
-                <table className="table table-striped">
-
-                    <thead>
-                    <tr>
-                        <th>Station A</th>
-                        <th>Station B</th>
-                        <th>Line</th>
-                    </tr>
-                    </thead>
-
-                    <tbody>
-
-                    {network.map((segment) => (
-                        <tr key={segment.id}>
-                            <td>{segment.station1}</td>
-                            <td>{segment.station2}</td>
-                            <td>{segment.line}</td>
-                        </tr>
-                    ))}
-
-                    </tbody>
-
-                </table>
             )}
 
         </div>

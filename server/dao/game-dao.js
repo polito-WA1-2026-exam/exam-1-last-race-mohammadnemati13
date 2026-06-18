@@ -30,9 +30,15 @@ function dbAll(sql, params = []) {
 // ---------------------------------------------------------------------
 
 /**
- * Retrieve the complete metro network including line information.
+ * Retrieve the complete metro network.
  *
- * Used during the Setup phase.
+ * Each returned segment contains:
+ * - both endpoint stations
+ * - the line identifier
+ * - the line name
+ *
+ * Used during the Setup phase to display
+ * the full metro map with line information.
  *
  * @returns {Promise<Array>}
  */
@@ -40,8 +46,14 @@ function getNetwork() {
     const sql = `
         SELECT
             segments.id,
-            s1.name AS station1,
-            s2.name AS station2,
+
+            s1.id AS station1Id,
+            s1.name AS station1Name,
+
+            s2.id AS station2Id,
+            s2.name AS station2Name,
+
+            segments.line_id AS lineId,
             lines.name AS line
         FROM segments
                  JOIN stations s1

@@ -11,7 +11,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getSegments, startGame, submitRoute } from "../API";
-import planningMap from "../assets/planning-Map.png";
+import MetroMap from "../components/MetroMap";
 
 const PLANNING_SECONDS = 90;
 
@@ -37,7 +37,6 @@ function PlanningPage() {
      */
     useEffect(() => {
 
-        // Retrieve the generated game and the available segments.
         const loadData = async () => {
 
             try {
@@ -145,6 +144,7 @@ function PlanningPage() {
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [seconds, loading]);
+
     /**
      * Fast lookup table used to convert station identifiers
      * into station names when rendering the selected route.
@@ -228,49 +228,25 @@ function PlanningPage() {
     }
 
     return (
+
         <div className="container mt-5">
 
-            <div className="phase-box">
+            <div className="mb-4">
 
-                <div className="row">
+                <h1>Planning Phase</h1>
 
-                    <div className="col-md-4">
+                <div className="d-flex gap-5 fs-5 mt-3">
 
-                        <h1>Planning Phase</h1>
-
-                        <div className="timer mb-3">
-                            Time Left: {seconds}s
-                        </div>
-
-                        <h5>
-                            Start: {startStation?.name}
-                        </h5>
-
-                        <h5>
-                            Destination: {destinationStation?.name}
-                        </h5>
-
+                    <div>
+                        <strong>Time Left:</strong> {seconds}s
                     </div>
 
-                    <div className="col-md-8 text-center">
+                    <div>
+                        <strong>Start:</strong> {startStation?.name}
+                    </div>
 
-                        <h5>
-                            Metro Map
-                        </h5>
-
-                        <p className="text-muted">
-                            Station names are shown, but line information is hidden.
-                        </p>
-
-                        <img
-                            src={planningMap}
-                            alt="Metro Map Without Lines"
-                            className="img-fluid border rounded"
-                            style={{
-                                maxWidth: "650px"
-                            }}
-                        />
-
+                    <div>
+                        <strong>Destination:</strong> {destinationStation?.name}
                     </div>
 
                 </div>
@@ -282,110 +258,180 @@ function PlanningPage() {
                     {error}
                 </p>
             )}
+            <div className="mb-4">
 
-            <hr />
 
-            <h5>Built Route</h5>
-
-            {route.length === 0 ? (
                 <p className="text-muted">
-                    No segment selected yet.
+                    Pairs of stations connected to each other.
+                    The line each segment belongs to is intentionally
+                    not shown - use what you memorized during the
+                    Setup phase.
                 </p>
-            ) : (
-                <ol>
-                    {route.map((segment, index) => (
-                        <li key={index}>
-                            {stationNameById.get(segment.station1)}
-                            {" -> "}
-                            {stationNameById.get(segment.station2)}
-                        </li>
-                    ))}
-                </ol>
-            )}
 
-            <button
-                className="btn btn-secondary me-2"
-                onClick={handleUndo}
-                disabled={route.length === 0}
-            >
-                Undo Last
-            </button>
+            </div>
 
-            <button
-                className="btn btn-success"
-                onClick={() => handleSubmit(route)}
-            >
-                Submit Route
-            </button>
+            <div className="row">
 
-            <hr />
+                {/* Built Route */}
 
-            <h5>Available Segments</h5>
+                <div className="col-md-3">
 
-            <p className="text-muted">
-                Pairs of stations connected to each other. The line each
-                segment belongs to is intentionally not shown - use what
-                you memorized during the Setup phase.
-            </p>
+                    <h5>Built Route</h5>
 
+                    <div
+                        className="border rounded p-3 bg-white"
+                        style={{
+                            height: "345px",
+                            overflowY: "auto"
+                        }}
+                    >
 
-            <ul className="list-group">
+                        {route.length === 0 ? (
 
-                {segments.map((segment) => {
+                            <p className="text-muted">
+                                No segment selected yet.
+                            </p>
 
-                    const pairKey =
-                        [segment.station1Id, segment.station2Id]
-                            .sort((a, b) => a - b)
-                            .join("-");
+                        ) : (
 
-                    const used = usedPairKeys.has(pairKey);
+                            <ol>
 
-                    // A segment is usable only if it has not been used
-                    // before and is connected to the current position.
-                    const usable =
-                        !used &&
-                        (
-                            segment.station1Id === currentPosition ||
-                            segment.station2Id === currentPosition
-                        );
+                                {route.map((segment, index) => (
 
-                    return (
-                        <li
-                            key={segment.id}
-                            className="list-group-item d-flex justify-content-between align-items-center"
+                                    <li key={index}>
+
+                                        {stationNameById.get(segment.station1)}
+                                        {" -> "}
+                                        {stationNameById.get(segment.station2)}
+
+                                    </li>
+
+                                ))}
+
+                            </ol>
+
+                        )}
+
+                    </div>
+
+                    <div className="mt-3">
+
+                        <button
+                            className="btn btn-secondary me-2"
+                            onClick={handleUndo}
+                            disabled={route.length === 0}
                         >
-                            <span
-                                className={
-                                    used
-                                        ? "text-muted text-decoration-line-through"
-                                        : ""
-                                }
-                            >
-                                {segment.station1Name} - {segment.station2Name}
-                            </span>
+                            Undo Last
+                        </button>
 
-                            <button
-                                className={
-                                    usable
-                                        ? "btn btn-sm btn-success"
-                                        : "btn btn-sm btn-outline-secondary"
-                                }
-                                disabled={!usable}
-                                onClick={() => handleAddSegment(segment)}
-                            >
-                                Use
-                            </button>
-                        </li>
-                    );
+                        <button
+                            className="btn btn-success"
+                            onClick={() => handleSubmit(route)}
+                        >
+                            Submit Route
+                        </button>
 
-                })}
+                    </div>
 
-            </ul>
-            <br />
-            <br />
-            <br />
+                </div>
+
+                {/* Available Segments */}
+
+                <div className="col-md-3">
+                    <h5>Available Segments</h5>
+
+                    <div
+                        className="border rounded bg-white"
+                        style={{
+                            height: "400px",
+                            overflowY: "auto"
+                        }}
+                    >
+
+                        <ul className="list-group list-group-flush">
+
+                            {segments.map((segment) => {
+
+                                const pairKey =
+                                    [segment.station1Id, segment.station2Id]
+                                        .sort((a, b) => a - b)
+                                        .join("-");
+
+                                const used =
+                                    usedPairKeys.has(pairKey);
+
+                                const usable =
+                                    !used &&
+                                    (
+                                        segment.station1Id === currentPosition ||
+                                        segment.station2Id === currentPosition
+                                    );
+
+                                return (
+
+                                    <li
+                                        key={segment.id}
+                                        className="list-group-item d-flex justify-content-between align-items-center"
+                                    >
+
+                                        <span
+                                            className={
+                                                used
+                                                    ? "text-muted text-decoration-line-through"
+                                                    : ""
+                                            }
+                                        >
+                                            {segment.station1Name}
+                                            {" - "}
+                                            {segment.station2Name}
+                                        </span>
+
+                                        <button
+                                            className={
+                                                usable
+                                                    ? "btn btn-sm btn-success"
+                                                    : "btn btn-sm btn-outline-secondary"
+                                            }
+                                            disabled={!usable}
+                                            onClick={() =>
+                                                handleAddSegment(segment)
+                                            }
+                                        >
+                                            Use
+                                        </button>
+
+                                    </li>
+
+                                );
+
+                            })}
+
+                        </ul>
+
+                    </div>
+
+                </div>
+
+                {/* Metro Map */}
+
+                <div className="col-md-6">
+                    <h5>Map</h5>
+
+                    <MetroMap
+                        segments={segments}
+                        startStation={startStation}
+                        destinationStation={destinationStation}
+                        route={route}
+                    />
+
+                </div>
+
+            </div>
+
         </div>
+
     );
+
 }
 
 export default PlanningPage;
