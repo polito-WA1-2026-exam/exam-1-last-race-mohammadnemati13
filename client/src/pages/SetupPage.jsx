@@ -78,7 +78,10 @@ function SetupPage() {
             <button
                 className="btn btn-success mt-4 mb-4"
                 disabled={loading}
-                onClick={() => navigate("/planning")}
+                onClick={() => {
+                    sessionStorage.setItem("planningFromSetup", "true");
+                    navigate("/planning");
+                }}
             >
                 Start Planning
             </button>

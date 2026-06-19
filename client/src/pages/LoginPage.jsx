@@ -110,7 +110,14 @@ function LoginPage() {
                 </button>
 
             </form>
-
+            <p><br/>
+                <b>Users Credentials</b>
+                <br/>
+                Username: alice    | Password: alice<br/>
+                Username: bob      | Password: bob<br/>
+                Username: charlie  | Password: charlie<br/>
+                Username: mohammad | Password: mohammad<br/>
+            </p>
         </div>
     );
 

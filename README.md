@@ -77,6 +77,8 @@
 * `AuthProvider` (in `AuthContext.jsx`): Manages authentication state and user session information.
 * `ProtectedRoute` (in `ProtectedRoute.jsx`): Prevents access to protected pages by anonymous users.
 * `Header` (in `Header.jsx`): Displays user information, logout button and ranking navigation.
+* `MetroMap` (in `MetroMap.jsx`): Renders the interactive metro network map using SVG.
+* `metroMapData` (in `metroMapData.js`): Contains station coordinates and visual layout data for the metro map.
 * `InstructionsPage` (in `InstructionsPage.jsx`): Displays game instructions.
 * `LoginPage` (in `LoginPage.jsx`): Handles user authentication.
 * `SetupPage` (in `SetupPage.jsx`): Displays the metro network during the memorization phase.
@@ -85,11 +87,33 @@
 * `ResultPage` (in `ResultPage.jsx`): Displays the final score.
 * `RankingPage` (in `RankingPage.jsx`): Displays the ranking of registered users.
 
-## Screenshot
+# Screenshot
 
-![Gameplay](./img/gameplay.png)
+Instructions Page
+![Instructions Page](./img/01-Instructions.png)
 
-![Ranking](./img/ranking.png)
+Login Page
+![Login Page](./img/02-Login.png)
+
+Setup Page
+![Setup Page](./img/03-Setup.png)
+
+Planning Page
+![Planning Page](./img/04-Planning Valid Route.png)
+
+Execution Page
+![Execution Page](./img/05-Execution.png)
+
+Result Page | Valid Route
+![Result Page](./img/06-1-Result Valid Route.png)
+
+Result Page | Wrong Route
+![Result Page](./img/06-2-Result Wrong Route.png)
+
+Ranking Page
+![Ranking Page](./img/07-Ranking.png)
+
+
 
 ## Users Credentials
 
@@ -99,5 +123,6 @@
 * mohammad, mohammad
 
 ## Use of AI Tools
+
 
 ChatGPT was used to review the code structure, improve documentation, generate comments, assist with debugging and verify implementation ideas. All generated suggestions were manually reviewed, adapted and tested before being integrated into the final project. The final implementation and design decisions were made by the student.

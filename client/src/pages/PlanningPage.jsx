@@ -8,7 +8,7 @@
  * countdown timer expires.
  */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getSegments, startGame, submitRoute } from "../API";
 import MetroMap from "../components/MetroMap";
@@ -18,6 +18,41 @@ const PLANNING_SECONDS = 90;
 function PlanningPage() {
 
     const navigate = useNavigate();
+
+    /**
+     * Read and consume the navigation flag once at
+     * component initialisation time.
+     *
+     * A ref is used because React StrictMode re-runs
+     * effects in development; reading inside an effect
+     * would fail on the second invocation.
+     */
+    const cameFromSetupRef = useRef(() => {
+        const flag = sessionStorage.getItem("planningFromSetup");
+        if (flag) {
+            sessionStorage.removeItem("planningFromSetup");
+        }
+        return !!flag;
+    });
+
+    // Evaluate the initialiser once
+    const cameFromSetup = useMemo(
+        () => cameFromSetupRef.current(),
+        []
+    );
+
+    /**
+     * If the page is reached via hard refresh (no navigation flag),
+     * redirect to the setup page so the user goes through the
+     * memorization phase again.
+     */
+    useEffect(() => {
+
+        if (!cameFromSetup) {
+            navigate("/setup", { replace: true });
+        }
+
+    }, [cameFromSetup, navigate]);
 
     const [segments, setSegments] = useState([]);
     const [startStation, setStartStation] = useState(null);
@@ -191,13 +226,18 @@ function PlanningPage() {
 
     /**
      * Append a segment to the current route.
+     *
+     * All unused segments can be selected regardless
+     * of whether they connect to the current position.
+     * The server performs final validation.
      */
     const handleAddSegment = (segment) => {
 
         const from = currentPosition;
 
+        // Always orient the segment: from -> to
         const to =
-            segment.station1Id === currentPosition
+            segment.station1Id === from
                 ? segment.station2Id
                 : segment.station1Id;
 
@@ -217,6 +257,73 @@ function PlanningPage() {
     const handleUndo = () => {
         setRoute((oldRoute) => oldRoute.slice(0, -1));
     };
+
+    /**
+     * Build a set of valid segment pair keys from the
+     * segments list, so we can verify connectivity.
+     */
+    const validPairKeys = useMemo(() => {
+
+        const set = new Set();
+
+        segments.forEach((s) => {
+            const key = [s.station1Id, s.station2Id]
+                .sort((a, b) => a - b)
+                .join("-");
+            set.add(key);
+        });
+
+        return set;
+
+    }, [segments]);
+
+    /**
+     * Validate each step of the built route and
+     * produce per-step feedback.
+     *
+     * This is a client-side hint only. The server
+     * remains the authoritative validator.
+     */
+    const routeValidation = useMemo(() => {
+
+        if (route.length === 0) {
+            return { steps: [], startOk: true, endOk: true };
+        }
+
+        const steps = route.map((segment, index) => {
+
+            // Check continuity: does this segment connect
+            // to the previous one?
+            const continuityOk =
+                index === 0
+                    ? segment.station1 === startStation?.id
+                    : segment.station1 === route[index - 1].station2;
+
+            // Check existence: is this pair a real segment?
+            const pairKey =
+                [segment.station1, segment.station2]
+                    .sort((a, b) => a - b)
+                    .join("-");
+
+            const segmentExists = validPairKeys.has(pairKey);
+
+            return {
+                continuityOk,
+                segmentExists,
+                valid: continuityOk && segmentExists
+            };
+
+        });
+
+        const startOk =
+            route[0].station1 === startStation?.id;
+
+        const endOk =
+            route[route.length - 1].station2 === destinationStation?.id;
+
+        return { steps, startOk, endOk };
+
+    }, [route, startStation, destinationStation, validPairKeys]);
 
     if (loading) {
         return (
@@ -294,21 +401,82 @@ function PlanningPage() {
 
                         ) : (
 
-                            <ol>
+                            <>
 
-                                {route.map((segment, index) => (
+                                <ol>
 
-                                    <li key={index}>
+                                    {route.map((segment, index) => {
 
-                                        {stationNameById.get(segment.station1)}
-                                        {" -> "}
-                                        {stationNameById.get(segment.station2)}
+                                        const stepInfo =
+                                            routeValidation.steps[index];
 
-                                    </li>
+                                        const isValid = stepInfo?.valid;
 
-                                ))}
+                                        return (
 
-                            </ol>
+                                            <li
+                                                key={index}
+                                                style={{
+                                                    color: isValid
+                                                        ? "inherit"
+                                                        : "#dc3545"
+                                                }}
+                                            >
+
+                                                {stationNameById.get(segment.station1)}
+                                                {" -> "}
+                                                {stationNameById.get(segment.station2)}
+
+                                                {!stepInfo?.continuityOk && (
+                                                    <small className="d-block text-danger">
+                                                        ✗ Not connected to previous step
+                                                    </small>
+                                                )}
+
+                                                {!stepInfo?.segmentExists && (
+                                                    <small className="d-block text-danger">
+                                                        ✗ This path does not exist
+                                                    </small>
+                                                )}
+
+                                                {stepInfo?.valid && (
+                                                    <small className="d-block text-success">
+                                                        ✓ Valid connection
+                                                    </small>
+                                                )}
+
+                                            </li>
+
+                                        );
+
+                                    })}
+
+                                </ol>
+
+                                {/* Route-level summary */}
+
+                                {!routeValidation.startOk && (
+                                    <div className="text-danger small mt-1">
+                                        ✗ Route does not start from {startStation?.name}
+                                    </div>
+                                )}
+
+                                {routeValidation.startOk &&
+                                 !routeValidation.endOk && (
+                                    <div className="text-warning small mt-1">
+                                        ⚠ Route does not yet reach {destinationStation?.name}
+                                    </div>
+                                )}
+
+                                {routeValidation.startOk &&
+                                 routeValidation.endOk &&
+                                 routeValidation.steps.every(s => s.valid) && (
+                                    <div className="text-success small mt-1 fw-bold">
+                                        ✓ Route looks valid!
+                                    </div>
+                                )}
+
+                            </>
 
                         )}
 
@@ -360,13 +528,6 @@ function PlanningPage() {
                                 const used =
                                     usedPairKeys.has(pairKey);
 
-                                const usable =
-                                    !used &&
-                                    (
-                                        segment.station1Id === currentPosition ||
-                                        segment.station2Id === currentPosition
-                                    );
-
                                 return (
 
                                     <li
@@ -388,11 +549,11 @@ function PlanningPage() {
 
                                         <button
                                             className={
-                                                usable
-                                                    ? "btn btn-sm btn-success"
-                                                    : "btn btn-sm btn-outline-secondary"
+                                                used
+                                                    ? "btn btn-sm btn-outline-secondary"
+                                                    : "btn btn-sm btn-success"
                                             }
-                                            disabled={!usable}
+                                            disabled={used}
                                             onClick={() =>
                                                 handleAddSegment(segment)
                                             }
