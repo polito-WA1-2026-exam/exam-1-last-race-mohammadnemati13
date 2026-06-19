@@ -99,16 +99,16 @@ Setup Page
 ![Setup Page](./img/03-Setup.png)
 
 Planning Page
-![Planning Page](./img/04-Planning Valid Route.png)
+![Planning Page](./img/04-Planning-Valid-Route.png)
 
 Execution Page
 ![Execution Page](./img/05-Execution.png)
 
 Result Page | Valid Route
-![Result Page](./img/06-1-Result Valid Route.png)
+![Result Page](./img/06-1-Result-Valid-Route.png)
 
 Result Page | Wrong Route
-![Result Page](./img/06-2-Result Wrong Route.png)
+![Result Page](./img/06-2-Result-Wrong-Route.png)
 
 Ranking Page
 ![Ranking Page](./img/07-Ranking.png)
